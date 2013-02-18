@@ -1,0 +1,18 @@
+
+public class Test
+{
+
+public static void main(String args[]) {
+
+  	//testing problem 1
+		ProblemOne test = new ProblemOne();
+		test.natMultiples(1,0);
+
+		//testing problem 2
+		ProblemTwo testTwo = new ProblemTwo();
+		testTwo.fib(1, 2, 2);
+		
+		
+    }
+
+}
