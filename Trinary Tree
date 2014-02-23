@@ -1,0 +1,230 @@
+/*
+ * Savannah Reiff
+ * 2/8/14
+ */
+
+public class problem2{
+	//Implement insert and delete in a tri-nary tree
+	/*
+	 * A tri-nary tree is much like a binary tree but with three child nodes for each parent instead of two 
+	 * -- with the left node being values less than the parent, 
+	 * the right node values greater than the parent, 
+	 * and the middle nodes values equal to the parent.
+	 */
+
+	//test problem 2, this is purely for testing
+	public static void main(String args[])
+	{
+		//create new tree
+		TrinaryTree tree = new EmptyTree();
+		//add and remove items
+		//Note: check in stepper if tree is correct
+		tree = tree.insert(5);
+		tree = tree.insert(7);
+		tree = tree.insert(9);
+		tree = tree.insert(2);
+		tree = tree.insert(3);
+		tree = tree.insert(1);
+		tree = tree.delete(2);
+		assertTrue(!tree.isEmpty());
+		
+		tree = tree.insert(7);
+		tree = tree.delete(5);
+		tree = tree.delete(3);
+		tree = tree.delete(7);
+		tree = tree.delete(9);
+		
+		assertTrue(!tree.isEmpty());
+		tree = tree.delete(1);
+		
+		assertTrue(!tree.isEmpty());
+		tree = tree.delete(7);
+		assertTrue(tree.isEmpty());
+	}
+
+	//will return success or failure for each test
+	private static void assertTrue(boolean test) {
+		if(test){
+			System.out.println("success");
+		}else{
+			System.out.println("failure");
+		}
+		
+	}
+
+}
+
+//A Trinary Tree is one of:
+//empty -> EmptyTree
+//non-empty-> Node (TrinaryTree, TrinaryTree, TrinaryTree, value)
+abstract class TrinaryTree{
+	
+	//isEmpty: returns true if the tree is empty
+	//isEmpty: -> boolean
+	public abstract boolean isEmpty();
+	
+	//insert: inserts the given value into this TrinaryTree
+	//insert: integer -> TrinaryTree
+	public abstract TrinaryTree insert(int i);
+	
+	//delete: deletes the given value from this TrinaryTree
+	//delete: integer -> TrinaryTree
+	public abstract TrinaryTree delete (int i);
+
+	//findNewMid: finds and returns the middle tree associated with x
+	//findNewMid: integer -> TrinaryTee
+	public abstract TrinaryTree findNewMid(int x);
+}
+
+//This class is for the empty case
+class EmptyTree extends TrinaryTree{
+	
+	EmptyTree(){
+		
+	}
+
+	//an emptyTree is always empty
+	public boolean isEmpty() {
+		return true;
+	}
+
+	//creates a new node, with all children empty
+	public TrinaryTree insert(int i) {
+		return new Node(i);
+	}
+
+	//throw an exception when trying to delete from empty tree
+	//a user should not try to delete from an empty tree
+	public TrinaryTree delete(int i) {
+		throw new RuntimeException("This is an empty tree");
+	}
+
+	//returns this because the middle is empty
+	public TrinaryTree findNewMid(int x) {
+		return this;
+	}
+	
+	
+}
+
+//This class is for the non-empty case
+class Node extends TrinaryTree{
+	//left child, less than value
+	TrinaryTree left;
+	//right child, greater than value
+	TrinaryTree right;
+	//middle child, equal to value
+	TrinaryTree middle;
+	//value of the node
+	int value;
+	
+	Node(TrinaryTree left, TrinaryTree right, TrinaryTree middle, int i){
+		this.left = left;
+		this.right = right;
+		this.middle = middle;
+		this.value = i;
+	}
+	
+	//create a new tree with only one value and empty children
+	Node(int i){
+		this.left = new EmptyTree();
+		this.right = new EmptyTree();;
+		this.middle = new EmptyTree();
+		this.value = i;
+	}
+	
+	//A Node is never empty
+	public boolean isEmpty() {
+		return false;
+	}
+
+	//Inserts the integer into this tree
+	//walks down the tree until it finds an emptyTree to insert the value into
+	public TrinaryTree insert(int i) {
+		if(i > this.value){
+			//value is greater so recur to the right
+			return new Node(this.left, this.right.insert(i), this.middle, this.value);
+		}if (i < this.value){
+			//value is less so recur to the left
+			return new Node(this.left.insert(i), this.right, this.middle, this.value);
+		}else{
+			//value is equal so recur down
+			return new Node(this.left, this.right, this.middle.insert(i), this.value);
+		}
+	}
+
+	//Deletes the integer from this tree
+	public TrinaryTree delete(int i) {
+		//we are at the tree of the value we want to remove
+		if(i == this.value){
+			//to recur down the middle, removing the last of the same elements would cause less rearrangement
+			if(!this.middle.isEmpty()){
+				return new Node(this.left, this.right, this.middle.delete(i), this.value);
+			}
+			
+			//check if right and left are empty, we know middle is empty
+			//if both sides are empty, remove the element and return empty
+			if(this.right.isEmpty() && this.left.isEmpty())
+			{
+				return new EmptyTree();
+			}
+			
+			//check if only right is empty, return left
+			if(this.right.isEmpty()){
+				return this.left;
+				
+			//check if only left is empty, return right
+			}if(this.left.isEmpty()){
+				return this.right;
+			}else{
+				
+			//this means left are right are not empty
+				//find new value for this node, the largest value in left side works best
+				int x = ((Node) this.left).findBiggest();
+				//set the left tree to be the same tree but without the new node value we are moving
+				this.left = this.left.delete(x);
+				//find new middle tree
+				/* We use this method in the case that there are middle values that need to be carried up
+				 * when we swap the node to a new location*/
+				TrinaryTree mid = this.left.findNewMid(x);
+				//insert new value and middle into the node
+				return new Node(this.left, this.right, mid, x);
+			}
+		}
+		//we need to recur down the tree to get to the value to remove
+		//we don't need to recur on middle tree b/c we check for that first
+		if(i> this.value){
+			//recur on right tree
+			return new Node(this.left, this.right.delete(i), this.middle, this.value);
+		} else{
+			//recur on left tree
+			return new Node(this.left.delete(i), this.right, this.middle, this.value);
+		}
+	}
+	
+	//findBiggest: -> int
+	//findBiggest: finds largest value in this tree, and returns the value
+	public int findBiggest(){
+		//we are at the biggest node if right is empty
+		if(this.right.isEmpty()){
+			return this.value;
+		}else{
+			//recur down right side to find biggest node
+			return ((Node) this.right).findBiggest();
+		}
+	}
+
+	//finds X and the tree associated with it
+	public TrinaryTree findNewMid(int x) {
+		if (this.value == x){
+			return this;
+		}if (this.value < x){
+			return this.right.findNewMid(x);
+		}else{
+			return this.left.findNewMid(x);
+		}
+	}
+	
+	
+	
+}
